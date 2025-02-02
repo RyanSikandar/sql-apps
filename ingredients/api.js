@@ -1,7 +1,7 @@
 const path = require("path");
 const express = require("express");
 const router = express.Router();
-
+const pg = require("pg");
 // client side static assets
 router.get("/", (_, res) => res.sendFile(path.join(__dirname, "./index.html")));
 router.get("/client.js", (_, res) =>
@@ -14,13 +14,28 @@ router.get("/client.js", (_, res) =>
 
 // connect to postgres
 
+const pool = new pg.Pool({
+  user: "postgres",
+  host: "localhost",
+  password: "ryan",
+  database: "recipeguru",
+  port: 5432
+})
+
 router.get("/type", async (req, res) => {
   const { type } = req.query;
   console.log("get ingredients", type);
 
   // return all ingredients of a type
-
-  res.status(501).json({ status: "not implemented", rows: [] });
+  const query = 'SELECT * FROM ingredients where type=$1';
+  const values = [type];
+  const result = await pool.query(query, values);
+  if ( result ) {
+    res.status(200).json({ status: "success", rows: result.rows });
+  }
+  else {
+    res.status(500).json({ status: "error", rows: [] });
+  }
 });
 
 router.get("/search", async (req, res) => {
@@ -29,9 +44,18 @@ router.get("/search", async (req, res) => {
   console.log("search ingredients", term, page);
 
   // return all columns as well as the count of all rows as total_count
-  // make sure to account for pagination and only return 5 rows at a time
+    const query = 'SELECT *, COUNT(*) OVER() AS total_count from ingredients where title ILIKE $1 OFFSET $2 LIMIT 5';
 
-  res.status(501).json({ status: "not implemented", rows: [] });
+    const values = [`%${term}%`, page * 5];
+  // make sure to account for pagination and only return 5 rows at a time
+  const result = await pool.query(query, values);
+
+  if ( result ) {
+    res.status(200).json({ status: "success", rows: result.rows });
+  }
+  else {
+    res.status(500).json({ status: "error", rows: [] });
+  }
 });
 
 /**
