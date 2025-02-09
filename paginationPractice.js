@@ -26,10 +26,28 @@ router.get("/", async (req, res) => {
         if (movies.length > limit) {
             nextCursor = movies.pop().id;
         }
-        res.json({
-            movies,
-            nextCursor
-        })
+        // Implementing Hateoas rules
+        const baseUrl = `http://${req.headers.host}${req.baseUrl}`;
+        console.log(baseUrl);
+        if (cursor) {
+            const prevCursor = cursor - limit;
+            res.json({
+                movies,
+                links: {
+                    self: `${baseUrl}?cursor=${cursor}`,
+                    next: `${baseUrl}?cursor=${nextCursor}`,
+                    prev: `${baseUrl}?cursor=${prevCursor}`
+                }
+            });
+        } else {
+            res.json({
+                movies,
+                links: {
+                    self: `${baseUrl}`,
+                    next: `${baseUrl}?cursor=${nextCursor}`
+                }
+            });
+        }
 
     }
     catch (err) {
