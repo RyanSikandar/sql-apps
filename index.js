@@ -3,6 +3,7 @@ const path = require("path");
 const completed = require("./completed");
 const recipes = require("./recipes/api");
 const ingredients = require("./ingredients/api");
+const movies = require("./paginationPractice")
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use("/images", express.static("./images"));
 app.use("/completed", completed);
 app.use("/recipes", recipes);
 app.use("/ingredients", ingredients);
+app.use("/movies", movies);
 
 app.get("/hello", (req, res) => res.json({ status: "ok" }));
 
